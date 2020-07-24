@@ -1,0 +1,118 @@
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+.chat-section{
+    height: 460px;
+    background-color: #efefef;
+    overflow-y: auto;
+    padding-top: 3%;
+    padding-bottom: 3%;
+    margin-bottom: 8%;
+}
+.send-form{
+    width: 95%;
+    position: absolute;
+    bottom: 0;
+}
+.send-form textarea{
+    width: 80%;
+    height: 35px;
+    border: 1px solid #ccc;
+    overflow-y: hidden;
+}
+.send-form textarea:focus{
+    border: none;
+    box-shadow: 0 0 0 0.2rem rgba(67, 69, 71, 0.25);
+}
+.send-form #send-btn{
+    width: 12.75%;
+    margin-right: 3px;
+}
+.send-form input[type="file"]{
+    display: none;
+}
+.upload-btn{
+    color:pink;
+    width: 50px;
+    padding: 10px 0 0 6px;
+}
+.emoji-btn{
+    border: none;
+    color: rgb(255, 190, 13);
+    outline: none;
+    background: none;
+    width: 50px;
+    padding: 6px 0 6px 5px;
+}
+.incoming{
+    background: rgb(162, 178, 250);
+    color: #fff;
+    margin-left: 5px;
+    margin-top: 35px;
+}
+.outgoing{
+    background-color: rgb(74, 215, 250);
+    color: #fff;
+    margin-right: 5px;
+    margin-top: 35px;
+    margin-left: auto;
+}
+.incoming-img{
+    clear:both;
+    margin-left: 5px;
+    margin-top: 35px;
+    margin-bottom:6%;
+}
+.outgoing-img{
+    clear: both;
+    margin-right: 5px;
+    margin-top: 35px;
+    float: right;
+    margin-bottom: 6%;
+}
+.message{
+    clear: both;
+    border-radius: 10px;
+    position: relative;
+    margin-top: 30px;
+    padding: 10px 15px;
+    width: 200px;
+}
+.outgoing:before {
+    content: "";
+    position: absolute;
+    right: 5px;                         /* half way down (vertical center). */
+    top:-28px;
+    border: solid 15px transparent;
+    border-bottom-color: rgb(74, 215, 250);
+    z-index: 1;
+}
+.incoming:before {
+    content: "";
+    position: absolute;
+    margin-left: -10px;                         /* half way down (vertical center). */
+    top:-28px;
+    border: solid 15px transparent;
+    border-bottom-color: rgb(162, 178, 250);
+    z-index: 1;
+}
+.message h4{
+    position: absolute;
+    top: -30px;
+    margin-left: -15px;
+    font-size: 14px;
+    color: #333;
+
+}
+.outgoing h4{
+    right: 3px;
+}
+.incoming h4{
+    left: 18px;
+}
+.message p{
+    width: 50%;
+    font-size: 13px;
+}
