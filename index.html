@@ -6,41 +6,43 @@
   <title>Chat App</title>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+  
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <div class="container mt-3 mb-1">
-      <div class="row">
-        <div class="col-md-8 offset-2">
-          <div class="card">
-            <h3 class="card-header text-info">
-              Joy Chat
-            </h3>
-            <div class="card-body">
-              <div class="chat-section">
-                <!-- message will be here -->
-              </div>
-              <div class="send-form">
-                <p class="feedback">
-
-                </p>
-                <form method="POST" enctype="multipart/form-data">
-                  <div class="form-group d-flex flex-row align-items-center">
-                      <textarea name="message" id="message" class="form-control" autofocus placeholder="Type a message..."></textarea>
-                      <button class="emoji-btn"><i class="fa fa-smile-o fa-lg"></i></button>
-                      <label class="upload-btn">
-                        <input id="uploadfile" type="file">
-                        <i class="fa fa-paperclip fa-lg"></i>
-                      </label>
-                      <button id="send-btn" type="submit" class="btn btn-primary btn-sm pb-2 px-1"><i class="fa fa-paper-plane"></i></button>
-                    </div>
-                  </form>
+  <div class="main">
+        <div class="container mt-1">
+          <div class="row">
+            <div class="col-md-8 offset-2">
+              <div class="card">
+                <h3 class="card-header text-info">
+                  Trainer
+                </h3>
+                <div class="card-body">
+                  <div class="chat-section">
+                    <!-- message will be here -->
+                  </div>
+                  <div class="send-form">
+                    <form method="POST" enctype="multipart/form-data">
+                      <p id="typing" class="ml-2"></p>
+                      <div class="form-group d-flex flex-row align-items-center">
+                          <textarea name="message" id="message" class="form-control" autofocus autocomplete="off" placeholder="Type a message..."></textarea>
+                         
+                          <button class="emoji-btn"><i class="fa fa-smile-o fa-lg"></i></button>
+                          <label class="upload-btn">
+                            <input id="uploadfile" type="file">
+                            <i class="fa fa-paperclip fa-lg"></i>
+                          </label>
+                          <button id="send-btn" type="submit" class="btn btn-primary btn-sm pb-2 px-1"><i class="fa fa-paper-plane"></i></button>
+                        </div>
+                      </form>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </div>
-   </div>
+       </div>
+  </div>
    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
    <script src="/socket.io/socket.io.js"></script>
@@ -49,22 +51,40 @@
         let name;
         let textarea = document.getElementById('message');
         let messageArea = document.getElementsByClassName('chat-section');
+        var timeouts = {};
+        time = 2000;
         do{
           name = prompt('Please enter your name:');
         }while(!name);
 
-        $('form').submit(function(e){
-          e.preventDefault();
-          if(textarea.value.length <= 0)
+        $('#message').on('keyup',(e)=>{
+          var user = name;
+          if(user in timeouts)
           {
-            return ('Say Something');
+            clearTimeout(timeouts[user]);
           }
           else
           {
-            var message = textarea.value;
-            sendMessage(message);
+            socket.emit('typing',user);
           }
+          timeouts[user] = setTimeout(()=>
+          { 
+            socket.emit('stoptyping',user);
+            delete timeouts[user];
+          },time);
         });
+        $('form').submit(function(event){
+              event.preventDefault();//prevent page refresh
+              if(textarea.value.length <= 0)
+              {
+
+              } 
+              else
+              {
+                var message = textarea.value;
+                sendMessage(message);
+              }
+            });
 
         function sendMessage(message){
           let msg={
@@ -96,17 +116,28 @@
 
         //append incoming message
         socket.on('message',(msg)=>{
+          shouldScroll = messageArea.scrollTop + messageArea.clientHeight === messageArea.scrollHeight;
           appendMessage(msg,'incoming');
-          scrollToBottom();
+          if(!shouldScroll)
+          {
+            scrollToBottom();
+          }
         });
 
         socket.on('userimage',(msg)=>{
           console.log('Image ready'+msg);
           appendImage(msg,'incoming-img');
-          // $('.chat-section').append($('<h4 style="font-size:12px;" class="ml-1 mt-2">').append($('<b>').text(msg.name)));
-          // $('.chat-section').append($('<img src="' + msg.file + '" width="130" height="130" class="ml-1" />'));
+          scrollToBottom();
         });
         
+        socket.on('typing',(msg)=>{
+          $('#typing').text(`${msg} is typing...`);
+        })
+
+        socket.on('stoptyping',(msg)=>{
+          $('#typing').text('');
+        });
+
         //upload image
         $('#uploadfile').on('change',function(e){
           var img = e.originalEvent.target.files[0];
@@ -118,6 +149,7 @@
               file : event.target.result
             };
             appendImage(msg,'outgoing-img');
+            scrollToBottom();
             socket.emit('image',msg);
           };
 
@@ -130,14 +162,13 @@
             let className = type;
             imgDiv.classList.add(className);
             let markup = `
-              <h4 style="font-size:12px;">${msg.name}</h4>
+              <h4 style="font-size:14px;">${msg.name}</h4>
               <img src="${msg.file}" width="130px" height="130px">
             `;
             imgDiv.innerHTML = markup;
             $('.chat-section').append(imgDiv);
-            // $('.chat-section').append($('<h4 style="font-size:12px;" class="mt-2 text-right mr-1">').append($('<b>').text(msg.name)));
-            // $('.chat-section').append($('<img src="' + msg.file + '" width="130" height="130" class="mr-1 float-right" />'));
         }
+
         function scrollToBottom()
         {
           messageArea.scrollTop = messageArea.scrollHeight;

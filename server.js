@@ -3,25 +3,19 @@ const { env } = require('process');
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
-var mongoose = require('mongoose');
+//require for file serve
 var fs = require('fs');
 
+// const Chat = require('./models/Chat');
+// const connect = require('./dbconnection');
+
 const port = process.env.port || 5000;
-var dbUrl = "mongodb+srv://thure1nhtunn:mKSIY64RdgKiWVcH@cluster0.hvkc9.mongodb.net/chatdb?retryWrites=true&w=majority";
 
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html')
   })
-
-mongoose.connect(dbUrl,{ useNewUrlParser:true, useUnifiedTopology:true },(err)=>{
-    if(err)
-    {
-        console.log(err)
-    }
-    console.log('Mangodb connected...');
-});
 
 io.on('connection',(socket)=>{
     //check user connected
@@ -31,12 +25,17 @@ io.on('connection',(socket)=>{
         socket.broadcast.emit('message', msg);
     });
 
-    socket.on('typing',(msg)=>{
-        console.log('typing');
-    });
-
     socket.on('image',(msg)=>{
         socket.broadcast.emit('userimage', msg);
+    });
+
+    //show user typing
+    socket.on('typing',(msg)=>{
+        socket.broadcast.emit('typing',msg);
+    });
+
+    socket.on('stoptyping',(msg)=>{
+        socket.broadcast.emit('stoptyping',msg);
     });
     //check user disconnect
     socket.on('disconn~ect',()=>{
@@ -44,6 +43,9 @@ io.on('connection',(socket)=>{
     });
 });
 
+// connect.then(db=>{
+//     console.log("connected correctly to the database");
+// });
 
 http.listen(port,()=>{
     console.log(`Lisetening on port ${port}`);
