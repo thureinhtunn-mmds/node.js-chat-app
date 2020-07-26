@@ -7,6 +7,7 @@ var io = require('socket.io')(http);
 var fs = require('fs');
 const { isObject } = require('util');
 
+const formatedMessage = require('./utils/message');
 // const Chat = require('./models/Chat');
 // const connect = require('./dbconnection');
 
@@ -23,25 +24,27 @@ io.on('connection',(socket)=>{
     socket.on('user-connected',(username)=>{
         console.log('id : '+socket.id+' with name '+username +' is connected to socket');
         users[username] = socket.id;
-        console.log(users);
+        //console.log(users);
         io.emit('user_connected',username);
     });
+    //show users in client
+    
 
     socket.on('message',(data)=>{
         console.log(data);
         var socketId = users[data.receiver];
-        console.log(socketId);
-        io.to(socketId).emit('new_message', data);
+        io.to(socketId).emit('new_message', formatedMessage(data.sender,data.receiver,data.message));
     });
     //test
-    socket.on('room',(room)=>{
-        console.log('My Room:'+socket.id);
-        console.log('Connected room :'+room);
-        socket.join(room);
-        io.sockets.in(room).emit('test_message','Hi',room);
-    });
+    // socket.on('room',(room)=>{
+    //     //console.log('My Room:'+socket.id);
+    //     //console.log('Connected room :'+room);
+    //     socket.join(room);
+    //     io.sockets.in(room).emit('test_message','Hi',room);
+    // });
 
     socket.on('image',(msg)=>{
+        console.log(msg);
         socket.broadcast.emit('userimage', msg);
     });
 
