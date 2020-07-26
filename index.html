@@ -11,12 +11,12 @@
 </head>
 <body>
   <div class="main">
-        <div class="container mt-1">
+        <div class="container mt-5">
           <div class="row">
             <div class="col-md-7 offset-2">
               <div class="card">
-                <h3 class="card-header text-info">
-                  Trainer
+                <h3 id="user" class="card-header text-info">
+                  
                 </h3>
                 <div class="card-body">
                   <div class="chat-section">
@@ -42,7 +42,11 @@
             </div>
             <div class="col-md-3">
               <h4><i class="fa fa-users"></i> People</h4>
-              <ul id="users" style="list-style-position: inside;list-style: none;"></ul>
+              <ul id="users" style="list-style-position: inside;list-style: none;">
+                <form action="index.html" method="POST">
+                  
+                </form>
+              </ul>
             </div>
           </div>
        </div>
@@ -59,11 +63,13 @@
         time = 2000;
         var receiver='';
         var sender = '';
+        var users = [];
         do{
           name = prompt('Please enter your name:');
         }while(!name);
-
+        //add sender to global
         sender = name;
+
         socket.emit('user-connected',name);
 
         $('#message').on('keyup',(e)=>{
@@ -96,10 +102,13 @@
             });
 
         function sendMessage(message){
+          
+           let time = getTime();
           let msg={
             sender:sender,
             receiver :receiver,
             message:message,
+            time:time,
           }
           //append outgoing message
           appendMessage(msg,'outgoing');
@@ -117,7 +126,7 @@
           mainDiv.classList.add(className,'message');
           let markup = 
           `
-          <h4>${msg.sender}</h4>
+          <h4>${msg.sender} <span>${msg.time}</span></h4>
           <p>${msg.message}</p>
           `;
           mainDiv.innerHTML = markup;
@@ -125,6 +134,7 @@
         }
 
         socket.on('user_connected',(username)=>{
+          console.log(username);
           var html = '';
           html += '<li style="width:100%"><button class="userlist" onclick="selectedUser(this.innerHTML)">'+username+'</button></li>';
           document.getElementById('users').innerHTML += html;
@@ -155,6 +165,8 @@
         socket.on('test_message',(data,sender)=>{
           console.log('incoming message:',sender+' said '+data);
         });
+
+        socket.on('users',(users)=>{console.log(users)});
         //upload image
         $('#uploadfile').on('change',function(e){
           var img = e.originalEvent.target.files[0];
@@ -175,11 +187,12 @@
 
         function appendImage(msg,type)
         {
+            let time = getTime();
             let imgDiv = document.createElement('div');
             let className = type;
             imgDiv.classList.add(className);
             let markup = `
-              <h4 style="font-size:14px;">${msg.name}</h4>
+              <h4 style="font-size:14px;">${msg.name} <span>${time}</span></h4>
               <img src="${msg.file}" width="130px" height="130px">
             `;
             imgDiv.innerHTML = markup;
@@ -195,6 +208,15 @@
         function scrollToBottom()
         {
           messageArea.scrollTop = messageArea.scrollHeight;
+        }
+        function getTime()
+        {
+          var date = new Date();
+          var hour = date.getHours('');
+          var minute = date.getMinutes();
+          var m=minute <10? '0'+ minute : minute;
+          var time = hour>12? hour-12+':'+m+' PM':h+':'+m+' AM'
+          return time;
         }
    </script>
 </body>
