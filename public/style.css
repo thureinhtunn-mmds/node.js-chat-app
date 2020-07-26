@@ -115,13 +115,21 @@
 .message p{
     font-size: 13px;
 }
+
+.userlist{
+    text-align: left;
+    width: inherit;
+    border: none;
+    padding: 10px 0px 10px 10px;
+    margin-bottom: 0.5em;
+}
 @media (max-width:640px)
 {
     .chat-section{
-        margin-bottom: 9%;
+        margin-bottom:11%;
     }
     .send-form textarea{
-        width: 57%;
+        width: 53%;
         height: 35px;
         border: 1px solid #ccc;
        

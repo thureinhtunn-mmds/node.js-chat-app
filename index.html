@@ -13,7 +13,7 @@
   <div class="main">
         <div class="container mt-1">
           <div class="row">
-            <div class="col-md-8 offset-2">
+            <div class="col-md-7 offset-2">
               <div class="card">
                 <h3 class="card-header text-info">
                   Trainer
@@ -24,7 +24,7 @@
                   </div>
                   <div class="send-form">
                     <form method="POST" enctype="multipart/form-data">
-                      <p id="typing" class="ml-2"></p>
+                      <p id="typing" class="ml-2 text-muted" style="font-style: italic;"></p>
                       <div class="form-group d-flex flex-row align-items-center">
                           <textarea name="message" id="message" class="form-control" autofocus autocomplete="off" placeholder="Type a message..."></textarea>
                          
@@ -40,6 +40,10 @@
                 </div>
               </div>
             </div>
+            <div class="col-md-3">
+              <h4><i class="fa fa-users"></i> People</h4>
+              <ul id="users" style="list-style-position: inside;list-style: none;"></ul>
+            </div>
           </div>
        </div>
   </div>
@@ -50,12 +54,17 @@
         var socket = io();
         let name;
         let textarea = document.getElementById('message');
-        let messageArea = document.getElementsByClassName('chat-section');
+        let messageArea = document.querySelector('.chat-section');
         var timeouts = {};
         time = 2000;
+        var receiver='';
+        var sender = '';
         do{
           name = prompt('Please enter your name:');
         }while(!name);
+
+        sender = name;
+        socket.emit('user-connected',name);
 
         $('#message').on('keyup',(e)=>{
           var user = name;
@@ -88,8 +97,9 @@
 
         function sendMessage(message){
           let msg={
-            name:name,
-            message:message
+            sender:sender,
+            receiver :receiver,
+            message:message,
           }
           //append outgoing message
           appendMessage(msg,'outgoing');
@@ -107,21 +117,24 @@
           mainDiv.classList.add(className,'message');
           let markup = 
           `
-          <h4>${msg.name}</h4>
+          <h4>${msg.sender}</h4>
           <p>${msg.message}</p>
           `;
           mainDiv.innerHTML = markup;
           $('.chat-section').append(mainDiv);
         }
 
+        socket.on('user_connected',(username)=>{
+          var html = '';
+          html += '<li style="width:100%"><button class="userlist" onclick="selectedUser(this.innerHTML)">'+username+'</button></li>';
+          document.getElementById('users').innerHTML += html;
+        });
+
         //append incoming message
-        socket.on('message',(msg)=>{
-          shouldScroll = messageArea.scrollTop + messageArea.clientHeight === messageArea.scrollHeight;
+        socket.on('new_message',(msg)=>{
+          console.log(msg);
           appendMessage(msg,'incoming');
-          if(!shouldScroll)
-          {
-            scrollToBottom();
-          }
+          scrollToBottom();
         });
 
         socket.on('userimage',(msg)=>{
@@ -138,6 +151,10 @@
           $('#typing').text('');
         });
 
+        //test
+        socket.on('test_message',(data,sender)=>{
+          console.log('incoming message:',sender+' said '+data);
+        });
         //upload image
         $('#uploadfile').on('change',function(e){
           var img = e.originalEvent.target.files[0];
@@ -169,6 +186,12 @@
             $('.chat-section').append(imgDiv);
         }
 
+        function selectedUser(user)
+        {
+          receiver = user;
+          console.log(receiver);
+          socket.emit('room',user);
+        }
         function scrollToBottom()
         {
           messageArea.scrollTop = messageArea.scrollHeight;

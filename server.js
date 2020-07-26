@@ -5,12 +5,13 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 //require for file serve
 var fs = require('fs');
+const { isObject } = require('util');
 
 // const Chat = require('./models/Chat');
 // const connect = require('./dbconnection');
 
 const port = process.env.port || 5000;
-
+var users = [];
 app.use(express.static(__dirname + '/public'));
 
 app.get('/', function (req, res) {
@@ -18,11 +19,26 @@ app.get('/', function (req, res) {
   })
 
 io.on('connection',(socket)=>{
-    //check user connected
-    console.log(socket.client.id +' connected..');
+    //show conncted user
+    socket.on('user-connected',(username)=>{
+        console.log('id : '+socket.id+' with name '+username +' is connected to socket');
+        users[username] = socket.id;
+        console.log(users);
+        io.emit('user_connected',username);
+    });
 
-    socket.on('message',(msg)=>{
-        socket.broadcast.emit('message', msg);
+    socket.on('message',(data)=>{
+        console.log(data);
+        var socketId = users[data.receiver];
+        console.log(socketId);
+        io.to(socketId).emit('new_message', data);
+    });
+    //test
+    socket.on('room',(room)=>{
+        console.log('My Room:'+socket.id);
+        console.log('Connected room :'+room);
+        socket.join(room);
+        io.sockets.in(room).emit('test_message','Hi',room);
     });
 
     socket.on('image',(msg)=>{
@@ -38,8 +54,8 @@ io.on('connection',(socket)=>{
         socket.broadcast.emit('stoptyping',msg);
     });
     //check user disconnect
-    socket.on('disconn~ect',()=>{
-        console.log(socket.id +' disconnected');
+    socket.on('disconnecting',()=>{
+        console.log(socket.id+' left the chat');
     });
 });
 
