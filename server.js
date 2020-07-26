@@ -24,14 +24,10 @@ io.on('connection',(socket)=>{
     socket.on('user-connected',(username)=>{
         console.log('id : '+socket.id+' with name '+username +' is connected to socket');
         users[username] = socket.id;
-        //console.log(users);
-        io.emit('user_connected',username);
+        socket.broadcast.emit('user_connected',username);
     });
-    //show users in client
-    
 
     socket.on('message',(data)=>{
-        console.log(data);
         var socketId = users[data.receiver];
         io.to(socketId).emit('new_message', formatedMessage(data.sender,data.receiver,data.message));
     });
@@ -45,7 +41,8 @@ io.on('connection',(socket)=>{
 
     socket.on('image',(msg)=>{
         console.log(msg);
-        socket.broadcast.emit('userimage', msg);
+        var socketId = users[msg.receiver];
+        socket.to(socketId).emit('userimage', msg);
     });
 
     //show user typing
