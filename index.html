@@ -113,6 +113,7 @@
             message:message,
             time:time,
           }
+
           //append outgoing message
           appendMessage(msg,'outgoing');
           textarea.value = '';
@@ -122,25 +123,26 @@
           socket.emit('message',msg);
         }
 
-        function appendMessage(msg,type)
+        function appendMessage(data,type)
         {
+          console.log(data);
           let mainDiv = document.createElement('div');
           let className = type;
           mainDiv.classList.add(className,'message');
           let currentUser='';
-          if(msg.sender == sender) 
+          if(data.sender == sender) 
           {
               currentUser = "You"
           }
           else
           {
-             currentUser = msg.sender;
+             currentUser = data.sender;
           }
           
           let markup = 
           `
-          <h4>${currentUser} <span>${msg.time}</span></h4>
-          <p>${msg.message}</p>
+          <h4>${currentUser} <span>${data.time}</span></h4>
+          <p>${data.message}</p>
           `;
           mainDiv.innerHTML = markup;
           $('.chat-section').append(mainDiv);
@@ -153,8 +155,22 @@
         });
 
         //append incoming message
-        socket.on('new_message',(msg)=>{
-          appendMessage(msg,'incoming');
+        socket.on('new_message',(data)=>{
+          console.log(data);
+          if(data.message.link)
+          {
+            console.log(data.message.link);
+            var urlDiv = document.createElement('div');
+            var urlInMessage = document.createElement('a');
+            urlInMessage.setAttribute('href',data.message.link);
+            urlInMessage.textContent += data.message.link;
+            //appendMessage(msg,'incoming');
+            console.log('Child should be appended!');
+          }
+          else
+          {
+            appendMessage(data,'incoming');
+          }
           scrollToBottom();
         });
 

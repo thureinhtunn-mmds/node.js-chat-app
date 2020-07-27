@@ -3,11 +3,13 @@ const { env } = require('process');
 var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
+const linkPreview = require('./utils/linkPreview');
 //require for file serve
 var fs = require('fs');
 const { isObject } = require('util');
 
 const formatedMessage = require('./utils/message');
+const formatedMessageLink = require('./utils/message');
 // const Chat = require('./models/Chat');
 // const connect = require('./dbconnection');
 
@@ -18,6 +20,8 @@ app.use(express.static(__dirname + '/public'));
 app.get('/', function (req, res) {
     res.sendFile(__dirname + '/index.html')
   })
+  
+var pattern = new RegExp('([a-zA-Z0-9]+://)?([a-zA-Z0-9_]+:[a-zA-Z0-9_]+@)?([a-zA-Z0-9.-]+\\.[A-Za-z]{2,4})(:[0-9]+)?([^ ])+');
 
 io.on('connection',(socket)=>{
     //show conncted user
@@ -29,7 +33,22 @@ io.on('connection',(socket)=>{
 
     socket.on('message',(data)=>{
         var socketId = users[data.receiver];
-        io.to(socketId).emit('new_message', formatedMessage(data.sender,data.receiver,data.message));
+        console.log(data);
+        if(urlValidation(data.message)){
+            var urlData;
+            //var urlData = linkPreview.startDiscover(pattern.exec(message)[0]);
+            linkPreview.startDiscover(pattern.exec(data.message)[0],function(results){
+                urlData = results;
+                console.log('This is url data: ',urlData);
+                io.to(socketId).emit('new_message',formatedMessageLink(data.sender,data.receiver,urlData));    
+            });
+            
+
+        }
+        else
+        {
+            io.to(socketId).emit('new_message', formatedMessage(data.sender,data.receiver,data.message));
+        }
     });
     //test
     // socket.on('room',(room)=>{
@@ -39,6 +58,7 @@ io.on('connection',(socket)=>{
     //     io.sockets.in(room).emit('test_message','Hi',room);
     // });
 
+    
     socket.on('image',(msg)=>{
         console.log(msg);
         var socketId = users[msg.receiver];
@@ -66,3 +86,7 @@ io.on('connection',(socket)=>{
 http.listen(port,()=>{
     console.log(`Lisetening on port ${port}`);
 });
+
+var urlValidation = (url) => {
+    return pattern.test(url);
+}
