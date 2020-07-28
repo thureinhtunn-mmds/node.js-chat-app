@@ -4,16 +4,21 @@ var app = express();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const linkPreview = require('./utils/linkPreview');
+const port = process.env.port || 5000;
 //require for file serve
 var fs = require('fs');
 const { isObject } = require('util');
+var bodyParser  =  require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+    extended : true,
+}));
 
 const formatedMessage = require('./utils/message');
 const formatedMessageLink = require('./utils/message');
 // const Chat = require('./models/Chat');
 // const connect = require('./dbconnection');
 
-const port = process.env.port || 5000;
 var users = [];
 app.use(express.static(__dirname + '/public'));
 
@@ -29,6 +34,16 @@ io.on('connection',(socket)=>{
         console.log('id : '+socket.id+' with name '+username +' is connected to socket');
         users[username] = socket.id;
         socket.broadcast.emit('user_connected',username);
+    });
+
+
+    app.post('/message',function(req,res){
+        var socketId = users[req.body.receiver];
+        var senderId = users[req.body.sender];
+        console.log(senderId);
+        io.to(socketId).emit('incoming_message', formatedMessage(req.body.sender,req.body.receiver,req.body.message));
+        socket.broadcast.to(senderId).emit('outgoing_message',formatedMessage(req.body.sender,req.body.receiver,req.body.message));
+        res.status(200).send(req.body);
     });
 
     socket.on('message',(data)=>{
@@ -60,7 +75,7 @@ io.on('connection',(socket)=>{
 
     
     socket.on('image',(msg)=>{
-        console.log(msg);
+        //console.log(msg);
         var socketId = users[msg.receiver];
         socket.to(socketId).emit('userimage', msg);
     });
