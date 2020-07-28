@@ -158,6 +158,16 @@
           scrollToBottom();
         });
 
+        socket.on('incoming_message',(msg)=>{
+          console.log('Incoming Message'+msg);
+          appendMessage(msg,'incoming');
+        });
+
+        socket.on('outgoing_message',(msg)=>{
+          console.log('Outgoing Message: '+msg);
+          appendMessage(msg,'outgoing');
+        });
+
         socket.on('userimage',(msg)=>{
           console.log('Image ready'+msg);
           appendImage(msg,'incoming-img');
