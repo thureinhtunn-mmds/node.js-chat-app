@@ -6,7 +6,7 @@ function formatedMessage(sender,receiver,message)
         sender,
         receiver,
         message,
-        time:moment().format('h:mm a')
+        time:moment().format('h:mm A')
     }
 }
 

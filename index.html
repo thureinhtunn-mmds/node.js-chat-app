@@ -55,23 +55,25 @@
    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
    <script src="/socket.io/socket.io.js"></script>
    <script>
-        var socket = io();
+        var socket = io();//assign io
         let name;
-        let textarea = document.getElementById('message');
-        let messageArea = document.querySelector('.chat-section');
+        let textarea = document.getElementById('message');//get the message 
+        let messageArea = document.querySelector('.chat-section');//get the chat-section area
         var timeouts = {};
-        time = 2000;
-        var receiver='';
-        var sender = '';
-        var users = [];
+        time = 2000;//timeout for typing disappear
+        var receiver='';//assign global receive
+        var sender = '';//assign global sender
+
+        //get name from window prompt
         do{
           name = prompt('Please enter your name:');
         }while(!name);
+
         //add sender to global
         sender = name;
 
         socket.emit('user-connected',name);
-
+        //set time outs for user typing...
         $('#message').on('keyup',(e)=>{
           var user = name;
           if(user in timeouts)
@@ -88,6 +90,7 @@
             delete timeouts[user];
           },time);
         });
+
         $('form').submit(function(event){
               event.preventDefault();//prevent page refresh
               if(textarea.value.length <= 0)
@@ -124,17 +127,26 @@
           let mainDiv = document.createElement('div');
           let className = type;
           mainDiv.classList.add(className,'message');
+          let currentUser='';
+          if(msg.sender == sender) 
+          {
+              currentUser = "You"
+          }
+          else
+          {
+             currentUser = msg.sender;
+          }
+          
           let markup = 
           `
-          <h4>${msg.sender} <span>${msg.time}</span></h4>
+          <h4>${currentUser} <span>${msg.time}</span></h4>
           <p>${msg.message}</p>
           `;
           mainDiv.innerHTML = markup;
           $('.chat-section').append(mainDiv);
         }
-
+        //append connected user except user him/her(self)
         socket.on('user_connected',(username)=>{
-          console.log(username);
           var html = '';
           html += '<li style="width:100%"><button class="userlist" onclick="selectedUser(this.innerHTML)">'+username+'</button></li>';
           document.getElementById('users').innerHTML += html;
@@ -142,9 +154,18 @@
 
         //append incoming message
         socket.on('new_message',(msg)=>{
-          console.log(msg);
           appendMessage(msg,'incoming');
           scrollToBottom();
+        });
+
+        socket.on('incoming_message',(msg)=>{
+          console.log('Incoming Message'+msg);
+          appendMessage(msg,'incoming');
+        });
+
+        socket.on('outgoing_message',(msg)=>{
+          console.log('Outgoing Message: '+msg);
+          appendMessage(msg,'outgoing');
         });
 
         socket.on('userimage',(msg)=>{
@@ -152,19 +173,19 @@
           appendImage(msg,'incoming-img');
           scrollToBottom();
         });
-        
+        //show typing when user press any key
         socket.on('typing',(msg)=>{
           $('#typing').text(`${msg} is typing...`);
         })
-
+        //hide typing message after 2 seconds
         socket.on('stoptyping',(msg)=>{
           $('#typing').text('');
         });
 
         //test
-        socket.on('test_message',(data,sender)=>{
-          console.log('incoming message:',sender+' said '+data);
-        });
+        // socket.on('test_message',(data,sender)=>{
+        //   console.log('incoming message:',sender+' said '+data);
+        // });
 
         socket.on('users',(users)=>{console.log(users)});
         //upload image
@@ -174,7 +195,8 @@
           reader.onload = function(evt)
           {
             var msg = {
-              name : name,
+              receiver : receiver,
+              sender : sender,
               file : event.target.result
             };
             appendImage(msg,'outgoing-img');
@@ -185,37 +207,48 @@
           reader.readAsDataURL(img);
         });
 
+        // append message to chat-section
         function appendImage(msg,type)
         {
             let time = getTime();
+          if(msg.sender == sender) 
+          {
+              currentUser = "You"
+          }
+          else
+          {
+             currentUser = msg.sender;
+          }
             let imgDiv = document.createElement('div');
             let className = type;
             imgDiv.classList.add(className);
             let markup = `
-              <h4 style="font-size:14px;">${msg.name} <span>${time}</span></h4>
+              <h4 style="font-size:14px;">${currentUser} <span>${time}</span></h4>
               <img src="${msg.file}" width="130px" height="130px">
             `;
             imgDiv.innerHTML = markup;
             $('.chat-section').append(imgDiv);
         }
-
+        //select user to send message
         function selectedUser(user)
         {
           receiver = user;
-          console.log(receiver);
           socket.emit('room',user);
         }
+        //auto scroll after new messages come
         function scrollToBottom()
         {
           messageArea.scrollTop = messageArea.scrollHeight;
         }
+
+        //get the message, image send times
         function getTime()
         {
           var date = new Date();
           var hour = date.getHours('');
           var minute = date.getMinutes();
           var m=minute <10? '0'+ minute : minute;
-          var time = hour>12? hour-12+':'+m+' PM':h+':'+m+' AM'
+          var time = hour>12? hour-12+':'+m+' PM':hour+':'+m+' AM'
           return time;
         }
    </script>
