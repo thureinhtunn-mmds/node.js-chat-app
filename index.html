@@ -136,15 +136,38 @@
           }
           else
           {
-             currentUser = data.sender;
+            currentUser = data.sender;
           }
-          
-          let markup = 
-          `
-          <h4>${currentUser} <span>${data.time}</span></h4>
-          <p>${data.message}</p>
-          `;
-          mainDiv.innerHTML = markup;
+          if(data.message.title)
+          {
+            console.log('There is link...');
+            let markup = 
+            `
+            <h4>${currentUser} <span>${data.time}</span></h4>
+            <a href="${data.message.link}" class="text-dark" style="text-decoration:none"><span class="text-primary">${data.message.link}</span>
+            <div class="card">
+              <div class="card-header">
+                <img src="${data.message.image}" class="img-fluid">
+              </div>
+              <div class="card-footer">
+                <span class="text-dark text-center">${data.message.title}</span>
+              </div>
+              <div>
+            </a>
+            `;
+
+            mainDiv.innerHTML = markup;
+          }
+          else
+          { 
+            let markup = 
+            `
+            <h4>${currentUser} <span>${data.time}</span></h4>
+            <p>${data.message}</p>
+            `;
+            
+            mainDiv.innerHTML = markup;
+          }
           $('.chat-section').append(mainDiv);
         }
         //append connected user except user him/her(self)
@@ -156,21 +179,8 @@
 
         //append incoming message
         socket.on('new_message',(data)=>{
-          console.log(data);
-          if(data.message.link)
-          {
-            console.log(data.message.link);
-            var urlDiv = document.createElement('div');
-            var urlInMessage = document.createElement('a');
-            urlInMessage.setAttribute('href',data.message.link);
-            urlInMessage.textContent += data.message.link;
-            //appendMessage(msg,'incoming');
-            console.log('Child should be appended!');
-          }
-          else
-          {
-            appendMessage(data,'incoming');
-          }
+          let time = getTime();
+          appendMessage(data,'incoming');
           scrollToBottom();
         });
 
